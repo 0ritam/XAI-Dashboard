@@ -1,0 +1,9 @@
+# Ignore everything under .idea ...
+.idea/**
+
+# ...but keep the shared stuff
+!.idea/codeStyles
+!.idea/runConfigurations
+!.idea/modules.xml
+!*.iml
+!.idea/inspectionProfiles
