@@ -1,6 +1,6 @@
-# XAIDashboard - Comprehensive .gitignore
+# XAIDashboard - Comprehensive .gitignore File
 
-# === Python ===
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -18,207 +18,131 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
 
-# === Virtual Environments ===
-# Don't commit the virtual environment
+# Virtual Environments
 xai_env/
 venv/
 env/
 ENV/
-env.bak/
-venv.bak/
-.env
-.venv
+.venv/
+.ENV/
 
-# === Jupyter Notebooks ===
-# Notebook checkpoints
+# Jupyter Notebook
 .ipynb_checkpoints/
 */.ipynb_checkpoints/*
+profile_default/
+ipython_config.py
 
-# Jupyter Notebook metadata
-.jupyter/
-.local/
-
-# === Data Science & ML ===
-# Large dataset files (keep structure, ignore data)
+# Data Science & ML Specific
 dataset/*.csv
 dataset/*.json
-dataset/*.xlsx
 dataset/*.parquet
-dataset/*.pickle
 dataset/*.pkl
+dataset/*.h5
+dataset/*.xlsx
+dataset/*.tsv
+models/
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+*.ckpt
+*.model
+*.bin
+mlruns/
+.mlflow/
+wandb/
+.neptune/
+outputs/
+lightning_logs/
 
-# Model files (often large)
-models/*.pkl
-models/*.joblib
-models/*.h5
-models/*.pb
-models/*.onnx
-models/*.pt
-models/*.pth
-models/*.model
+# Caches and temporary files
+.cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.coverage.*
+.pytest_cache/
+cover/
+*.cover
+*.py,cover
+.hypothesis/
 
-# Data processing outputs
-processed_data/
-output/
-results/
-experiments/
+# Streamlit
+.streamlit/
+streamlit_cache/
 
-# === IDE & Editors ===
-# VS Code
+# IDEs and Editors
 .vscode/
-*.code-workspace
-
-# PyCharm
 .idea/
-*.iml
-*.ipr
-*.iws
-
-# Sublime Text
-*.sublime-project
-*.sublime-workspace
-
-# Vim
 *.swp
 *.swo
 *~
+.project
+.metadata
+tmp/
+*.tmp
+*.bak
+.spyderproject
+.spyproject
+.ropeproject
 
-# Emacs
-*~
-\#*\#
-/.emacs.desktop
-/.emacs.desktop.lock
-*.elc
-auto-save-list
-tramp
-.\#*
-
-# === Operating System ===
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
-*.cab
-*.msi
-*.msix
-*.msm
-*.msp
-*.lnk
-
-# macOS
+# OS Specific
 .DS_Store
-.AppleDouble
-.LSOverride
-Icon
+.DS_Store?
 ._*
-.DocumentRevisions-V100
-.fseventsd
 .Spotlight-V100
-.TemporaryItems
 .Trashes
-.VolumeIcon.icns
-.com.apple.timemachine.donotpresent
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
-.apdisk
+ehthumbs.db
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
 
-# Linux
-*~
-.fuse_hidden*
-.directory
-.Trash-*
-.nfs*
-
-# === Logs & Debugging ===
+# Logs
 *.log
 logs/
-*.out
-*.err
+log/
 
-# === Temporary Files ===
-*.tmp
-*.temp
-*.bak
-*.backup
-*.orig
-
-# === Environment Variables ===
+# Environment variables
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# === Package Managers ===
-# pip
-pip-log.txt
-pip-delete-this-directory.txt
-
-# === Testing ===
-.coverage
-.pytest_cache/
-.tox/
-.nox/
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-
-# === Documentation ===
-docs/_build/
-.sphinx/
-
-# === Cache ===
-.cache/
-*.cache
-
-# === XAI/ML Specific ===
-# SHAP values cache
-.shap_cache/
+# XAI Specific
+shap_cache/
+lime_cache/
+explainer_cache/
+plots/
+figures/
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.svg
 
 # Plotly cache
 .plotly/
 
-# Weights & Biases
-wandb/
-
-# MLflow
-mlruns/
-mlflow.db
-
-# TensorBoard
-tensorboard_logs/
-
-# === Configuration ===
-# Keep example configs, ignore actual configs
+# Configuration files that might contain sensitive data
 config.ini
 config.yaml
-config.json
-!config.example.*
-!config.template.*
+secrets.yaml
+credentials.json
 
-# === Streamlit ===
-.streamlit/
-
-# === Large Files ===
-# Anything over 100MB (GitHub limit)
-*.zip
-*.rar
-*.7z
-*.tar.gz
-*.tar.bz2
-
-# === Custom Project Specific ===
-# Add any project-specific files here
-# Example:
-# custom_analysis/
-# personal_notes.txt
+# Temporary analysis files
+temp/
+tmp/
+scratch/
+experiments/
+notebooks/checkpoints/
