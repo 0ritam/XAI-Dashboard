@@ -1,4 +1,4 @@
-# XAIDashboard - Comprehensive .gitignore File
+# XAIDashboard .gitignore
 
 # Python
 __pycache__/
@@ -25,13 +25,13 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# Virtual Environments
+# Virtual Environment
 xai_env/
 venv/
 env/
 ENV/
 .venv/
-.ENV/
+.env
 
 # Jupyter Notebook
 .ipynb_checkpoints/
@@ -39,64 +39,41 @@ ENV/
 profile_default/
 ipython_config.py
 
-# Data Science & ML Specific
-dataset/*.csv
-dataset/*.json
-dataset/*.parquet
-dataset/*.pkl
-dataset/*.h5
-dataset/*.xlsx
-dataset/*.tsv
+# Data Science & ML
+dataset/
 models/
 *.pkl
 *.joblib
 *.h5
+*.hdf5
 *.pt
 *.pth
-*.ckpt
-*.model
-*.bin
+*.onnx
+*.pb
+experiments/
 mlruns/
-.mlflow/
 wandb/
-.neptune/
-outputs/
-lightning_logs/
+.wandb/
 
-# Caches and temporary files
-.cache/
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-.nox/
-.coverage.*
-.pytest_cache/
-cover/
-*.cover
-*.py,cover
-.hypothesis/
+# SHAP cache
+.shap_cache/
 
-# Streamlit
-.streamlit/
-streamlit_cache/
+# Plotly cache
+.plotly/
 
-# IDEs and Editors
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-.project
-.metadata
-tmp/
-*.tmp
-*.bak
-.spyderproject
-.spyproject
-.ropeproject
 
-# OS Specific
+# OS
 .DS_Store
 .DS_Store?
 ._*
@@ -105,44 +82,46 @@ tmp/
 ehthumbs.db
 Thumbs.db
 desktop.ini
-$RECYCLE.BIN/
 
 # Logs
 *.log
 logs/
-log/
+.npm/
+.eslintcache
 
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
 
-# XAI Specific
-shap_cache/
-lime_cache/
-explainer_cache/
-plots/
-figures/
+# Coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Streamlit
+.streamlit/
+
+# Output files
+*.html
 *.png
 *.jpg
 *.jpeg
+*.gif
 *.pdf
 *.svg
+outputs/
 
-# Plotly cache
-.plotly/
-
-# Configuration files that might contain sensitive data
-config.ini
-config.yaml
-secrets.yaml
-credentials.json
-
-# Temporary analysis files
-temp/
-tmp/
-scratch/
-experiments/
-notebooks/checkpoints/
+# Keep important files
+!requirements.txt
+!app.py
+!README.md
+!notebooks/main.ipynb
