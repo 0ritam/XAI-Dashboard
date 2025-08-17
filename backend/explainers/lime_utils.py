@@ -78,21 +78,49 @@ class LIMEExplainer:
             Dictionary with LIME explanation data
         """
         try:
-            # Get input as numpy array
-            instance = input_data[self.feature_names].values[0]
+            # Ensure we have the right feature order and format
+            if isinstance(input_data, pd.DataFrame):
+                # Get features in the expected order
+                available_features = [f for f in self.feature_names if f in input_data.columns]
+                if len(available_features) < len(self.feature_names):
+                    logger.warning(f"Missing features: {set(self.feature_names) - set(available_features)}")
+                
+                instance = input_data[available_features].values[0].astype(float)
+            else:
+                instance = np.array(input_data).astype(float)
+            
+            # Ensure instance has the right shape
+            if len(instance) != len(self.feature_names):
+                logger.warning(f"Feature count mismatch: got {len(instance)}, expected {len(self.feature_names)}")
+                # Pad or truncate as needed
+                if len(instance) < len(self.feature_names):
+                    instance = np.pad(instance, (0, len(self.feature_names) - len(instance)), mode='constant')
+                else:
+                    instance = instance[:len(self.feature_names)]
             
             # Generate explanation
             explanation = self.explainer.explain_instance(
                 instance, 
                 self.predict_fn,
-                num_features=num_features
+                num_features=min(num_features, len(self.feature_names))
             )
             
-            # Extract feature weights
+            # Extract feature weights safely
             feature_weights = {}
-            for feature_idx, weight in explanation.as_list():
-                feature_name = self.feature_names[feature_idx] if isinstance(feature_idx, int) else feature_idx
-                feature_weights[feature_name] = float(weight)
+            try:
+                for feature_info in explanation.as_list():
+                    if isinstance(feature_info, tuple) and len(feature_info) == 2:
+                        feature_idx, weight = feature_info
+                        if isinstance(feature_idx, int) and 0 <= feature_idx < len(self.feature_names):
+                            feature_name = self.feature_names[feature_idx]
+                            feature_weights[feature_name] = float(weight)
+                        elif isinstance(feature_idx, str):
+                            feature_weights[feature_idx] = float(weight)
+            except Exception as e:
+                logger.error(f"Error extracting feature weights: {str(e)}")
+                # Fallback: create dummy weights
+                for i, fname in enumerate(self.feature_names[:num_features]):
+                    feature_weights[fname] = 0.0
             
             # Get top features by absolute weight
             top_features = dict(sorted(
@@ -101,23 +129,38 @@ class LIMEExplainer:
                 reverse=True
             )[:5])
             
-            # Get prediction info
-            prediction_proba = self.predict_fn(input_data[self.feature_names].values)[0]
-            predicted_class = self.class_names[np.argmax(prediction_proba)]
+            # Get prediction info safely
+            try:
+                # Reshape instance for prediction if needed
+                instance_for_pred = instance.reshape(1, -1)
+                prediction_proba = self.predict_fn(instance_for_pred)[0]
+                predicted_class_idx = np.argmax(prediction_proba)
+                predicted_class = self.class_names[predicted_class_idx] if predicted_class_idx < len(self.class_names) else "Unknown"
+                
+                explanation_data = {
+                    "feature_weights": feature_weights,
+                    "top_features": top_features,
+                    "predicted_class": predicted_class,
+                    "prediction_probabilities": {
+                        class_name: float(prob) 
+                        for class_name, prob in zip(self.class_names, prediction_proba)
+                        if len(self.class_names) == len(prediction_proba)
+                    },
+                    "intercept": float(explanation.intercept[predicted_class_idx]) if len(explanation.intercept) > predicted_class_idx else 0.0,
+                    "local_prediction": float(explanation.local_pred[predicted_class_idx]) if len(explanation.local_pred) > predicted_class_idx else 0.0
+                }
+            except Exception as e:
+                logger.error(f"Error in prediction processing: {str(e)}")
+                explanation_data = {
+                    "feature_weights": feature_weights,
+                    "top_features": top_features,
+                    "predicted_class": "Unknown",
+                    "prediction_probabilities": {},
+                    "intercept": 0.0,
+                    "local_prediction": 0.0
+                }
             
-            explanation_data = {
-                "feature_weights": feature_weights,
-                "top_features": top_features,
-                "predicted_class": predicted_class,
-                "prediction_probabilities": {
-                    class_name: float(prob) 
-                    for class_name, prob in zip(self.class_names, prediction_proba)
-                },
-                "intercept": float(explanation.intercept[np.argmax(prediction_proba)]),
-                "local_prediction": float(explanation.local_pred[np.argmax(prediction_proba)])
-            }
-            
-            logger.info(f"LIME explanation generated for instance")
+            logger.info(f"LIME explanation generated successfully")
             return explanation_data
             
         except Exception as e:

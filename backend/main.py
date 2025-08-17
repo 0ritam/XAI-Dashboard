@@ -11,6 +11,16 @@ from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse
 
+# Environment configuration
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # React dev server (Create React App)
+    "http://localhost:5173",  # Vite dev server
+    FRONTEND_URL,  # Custom frontend URL
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+]
+
 # Import schemas
 from schemas.input import StudentInput
 from schemas.output import (
@@ -171,10 +181,9 @@ class ModelManager:
             # Create DataFrame
             df = pd.DataFrame([data_dict])
             
-            # Apply label encoders to categorical features
+            # Apply label encoders to categorical features (excluding code_module and code_presentation)
             categorical_features = [
-                'code_module', 'code_presentation', 'gender', 'region', 
-                'highest_education', 'imd_band', 'age_band', 'disability'
+                'gender', 'region', 'highest_education', 'age_band', 'disability'
             ]
             
             for feature in categorical_features:
@@ -184,12 +193,37 @@ class ModelManager:
                         df[feature] = le.transform(df[feature])
                     except ValueError as e:
                         logger.warning(f"Unknown category for {feature}: {df[feature].iloc[0]}")
-                        # Handle unknown categories by assigning most frequent class
-                        df[feature] = le.transform([le.classes_[0]])[0]
+                        # For unknown categories, use the most common class (index 0)
+                        df[feature] = 0
                 elif feature in df.columns:
-                    # If no label encoder exists, convert to numeric hash
-                    logger.warning(f"No label encoder found for {feature}, using hash encoding")
-                    df[feature] = df[feature].astype(str).apply(lambda x: hash(x) % 1000000)
+                    # If no label encoder exists, map common values or use defaults
+                    logger.warning(f"No label encoder found for {feature}, using intelligent mapping")
+                    if feature == 'imd_band':
+                        # Map percentage bands to indices
+                        imd_value = str(df[feature].iloc[0])
+                        if '90-100' in imd_value:
+                            df[feature] = 9
+                        elif '80-90' in imd_value:
+                            df[feature] = 8
+                        elif '70-80' in imd_value:
+                            df[feature] = 7
+                        elif '60-70' in imd_value:
+                            df[feature] = 6
+                        elif '50-60' in imd_value:
+                            df[feature] = 5
+                        elif '40-50' in imd_value:
+                            df[feature] = 4
+                        elif '30-40' in imd_value:
+                            df[feature] = 3
+                        elif '20-30' in imd_value:
+                            df[feature] = 2
+                        elif '10-20' in imd_value:
+                            df[feature] = 1
+                        else:
+                            df[feature] = 0  # 0-10% or unknown
+                    else:
+                        # For other features, use consistent encoding
+                        df[feature] = df[feature].astype(str).apply(lambda x: hash(x) % 100)
             
             # Convert boolean columns to int
             bool_columns = ['completed_course', 'withdrawal_status', 'disability']
@@ -197,8 +231,8 @@ class ModelManager:
                 if col in df.columns:
                     df[col] = df[col].astype(int)
             
-            # Ensure column order matches training data
-            # Get the actual features the model expects (from the error message, we know it expects 15 features)
+            # Ensure column order matches training data exactly
+            # Based on the error message, the model expects these 15 features in this exact order:
             model_expected_features = [
                 'gender', 'age_band', 'highest_education', 'disability', 'region', 
                 'total_clicks', 'avg_clicks_per_session', 'active_days', 'daily_engagement_rate', 
@@ -351,12 +385,12 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Add CORS middleware
+# Add CORS middleware with environment-based configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # React dev servers
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -549,6 +583,61 @@ async def health_check():
         version="1.0.0",
         timestamp=datetime.utcnow().isoformat() + "Z"
     )
+
+@app.get("/guidelines")
+async def get_pass_guidelines():
+    """Get guidelines for achieving Pass predictions"""
+    return {
+        "guidelines": {
+            "high_priority_factors": {
+                "completed_course": "Must be True/1 (87.94% model importance)",
+                "total_clicks": "Aim for > 3000 clicks (high engagement)", 
+                "studied_credits": "60-240 credits (reasonable study load)"
+            },
+            "engagement_metrics": {
+                "avg_clicks_per_session": "> 30",
+                "active_days": "> 60",
+                "daily_engagement_rate": "> 0.6", 
+                "engagement_duration": "> 200 minutes"
+            },
+            "academic_performance": {
+                "avg_assessment_score": "> 70",
+                "total_assessments": "> 3"
+            },
+            "demographics_that_help": {
+                "age_band": "35-55 (mature students perform better)",
+                "highest_education": "HE Qualification or higher",
+                "disability": "N (no disability)"
+            },
+            "example_pass_profile": {
+                "gender": "M",
+                "region": "South East Region",
+                "highest_education": "HE Qualification",
+                "imd_band": "70-80%",
+                "age_band": "35-55", 
+                "disability": "N",
+                "num_of_prev_attempts": 0,
+                "studied_credits": 120,
+                "total_clicks": 4500,
+                "avg_clicks_per_session": 45,
+                "active_days": 75,
+                "daily_engagement_rate": 0.75,
+                "avg_assessment_score": 78,
+                "total_assessments": 4,
+                "completed_course": True,
+                "total_sessions": 85,
+                "engagement_duration": 350,
+                "withdrawal_status": False,
+                "click_variability": 10.0,
+                "first_access_day": 5,
+                "last_access_day": 180,
+                "score_consistency": 5.0,
+                "first_submission": 15,
+                "last_submission": 170,
+                "banked_assessments": 0
+            }
+        }
+    }
 
 @app.post("/predict", response_model=PredictionResponse)
 async def predict_student_performance(
